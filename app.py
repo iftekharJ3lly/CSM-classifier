@@ -3,37 +3,11 @@ import torch.nn as nn
 from torchvision import transforms
 from PIL import Image
 import gradio as gr
+import torchvision.models as models
 
-class ConvolutionalNN(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.block1 = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=10, kernel_size=3, stride=1),
-            nn.ReLU()
-        )
-        self.block2 = nn.Sequential(
-            nn.Conv2d(in_channels=10, out_channels=10, kernel_size=3, stride=1),
-            nn.ReLU(), 
-            nn.MaxPool2d(kernel_size=2)
-        )
-        self.block3 = nn.Sequential(
-            nn.Conv2d(in_channels=10, out_channels=10, kernel_size=3, stride=1),
-            nn.ReLU()
-        )
-        self.block4 = nn.Sequential(
-            nn.Conv2d(in_channels=10, out_channels=10, kernel_size=3, stride=1),
-            nn.ReLU(), 
-            nn.MaxPool2d(kernel_size=2)
-        )
-        self.block5 = nn.Sequential(
-            nn.Flatten(), 
-            nn.Linear(in_features=8410, out_features=4)
-        )
-    def forward(self, x):
-        return self.block5(self.block4(self.block3(self.block2(self.block1(x)))))
-
-model = ConvolutionalNN()
-model.load_state_dict(torch.load("models/model.pth", map_location="cpu"))
+model = models.resnet18()
+model.fc = nn.Linear(model.fc.in_features, 4)
+model.load_state_dict(torch.load("models/best_model.pth", map_location="cpu"))
 model.eval()
 
 
@@ -56,4 +30,4 @@ def predict(image):
 
 
 interface = gr.Interface(fn=predict, inputs=gr.Image(type="pil"), outputs="text")
-interface.launch()
+interface.launch(share=True)
